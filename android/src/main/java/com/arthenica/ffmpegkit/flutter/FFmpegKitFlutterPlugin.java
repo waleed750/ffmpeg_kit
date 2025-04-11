@@ -74,8 +74,9 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 // import io.flutter.plugin.common.PluginRegistry;
+import io.flutter.plugin.common.PluginRegistry.ActivityResultListener;
 
-public class FFmpegKitFlutterPlugin implements FlutterPlugin, ActivityAware, MethodCallHandler, EventChannel.StreamHandler, PluginRegistry.ActivityResultListener {
+public class FFmpegKitFlutterPlugin implements FlutterPlugin, ActivityAware, MethodCallHandler, EventChannel.StreamHandler, ActivityResultListener {
 
     public static final String LIBRARY_NAME = "ffmpeg-kit-flutter";
     public static final String PLATFORM_NAME = "android";
@@ -195,7 +196,7 @@ public class FFmpegKitFlutterPlugin implements FlutterPlugin, ActivityAware, Met
     @Override
     public void onAttachedToActivity(@NonNull ActivityPluginBinding activityPluginBinding) {
         Log.d(LIBRARY_NAME, String.format("FFmpegKitFlutterPlugin %s attached to activity %s.", this, activityPluginBinding.getActivity()));
-        init(flutterPluginBinding.getBinaryMessenger(), flutterPluginBinding.getApplicationContext(), activityPluginBinding.getActivity(), null, activityPluginBinding);
+        init(flutterPluginBinding.getBinaryMessenger(), flutterPluginBinding.getApplicationContext(), activityPluginBinding.getActivity(), activityPluginBinding);
     }
 
     @Override
@@ -647,37 +648,37 @@ public class FFmpegKitFlutterPlugin implements FlutterPlugin, ActivityAware, Met
         }
     }
 
-    // @SuppressWarnings("deprecation")
-    // protected void init(final BinaryMessenger messenger, final Context context, final Activity activity, final io.flutter.plugin.common.PluginRegistry.Registrar registrar, final ActivityPluginBinding activityBinding) {
-    //     registerGlobalCallbacks();
+    protected void init(final BinaryMessenger messenger,
+                    final Context context,
+                    final Activity activity,
+                    final ActivityPluginBinding activityBinding) {
 
-    //     if (methodChannel == null) {
-    //         methodChannel = new MethodChannel(messenger, METHOD_CHANNEL);
-    //         methodChannel.setMethodCallHandler(this);
-    //     } else {
-    //         Log.i(LIBRARY_NAME, "FFmpegKitFlutterPlugin method channel was already initialised.");
-    //     }
+    registerGlobalCallbacks();
 
-    //     if (eventChannel == null) {
-    //         eventChannel = new EventChannel(messenger, EVENT_CHANNEL);
-    //         eventChannel.setStreamHandler(this);
-    //     } else {
-    //         Log.i(LIBRARY_NAME, "FFmpegKitFlutterPlugin event channel was already initialised.");
-    //     }
+    if (methodChannel == null) {
+        methodChannel = new MethodChannel(messenger, METHOD_CHANNEL);
+        methodChannel.setMethodCallHandler(this);
+    } else {
+        Log.i(LIBRARY_NAME, "FFmpegKitFlutterPlugin method channel was already initialised.");
+    }
 
-    //     this.context = context;
-    //     this.activity = activity;
+    if (eventChannel == null) {
+        eventChannel = new EventChannel(messenger, EVENT_CHANNEL);
+        eventChannel.setStreamHandler(this);
+    } else {
+        Log.i(LIBRARY_NAME, "FFmpegKitFlutterPlugin event channel was already initialised.");
+    }
 
-    //     if (registrar != null) {
-    //         // V1 embedding setup for activity listeners.
-    //         registrar.addActivityResultListener(this);
-    //     } else {
-    //         // V2 embedding setup for activity listeners.
-    //         activityBinding.addActivityResultListener(this);
-    //     }
+    this.context = context;
+    this.activity = activity;
+    this.activityPluginBinding = activityBinding;
 
-    //     Log.d(LIBRARY_NAME, String.format("FFmpegKitFlutterPlugin %s initialised with context %s and activity %s.", this, context, activity));
-    // }
+    // ✅ Flutter v2 activity result listener registration
+    activityBinding.addActivityResultListener(this);
+
+    Log.d(LIBRARY_NAME, String.format("FFmpegKitFlutterPlugin %s initialised with context %s and activity %s.", this, context, activity));
+}
+
 
     protected void uninit() {
         uninitMethodChannel();
